@@ -22,42 +22,41 @@ func main() {
 		log.Fatalf("Failed to create key and cert files: %v", err)
 	}
 
-	// Create a new HTTP server
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
-
-		w.Write([]byte("This is an example server.\n"))
-
-		// Get the curve ID from the writer
-		curveID := getWriterCurveID(w)
-		curveName := getTlsCurveIDName(curveID)
-		response := fmt.Sprintf("TLS Connection: Curve ID: 0x%x, Name: %v\n", curveID, curveName)
-
-		// Get the cipher suite ID from the writer
-		cipherSuite := getWriterCipherSuite(w)
-		response += fmt.Sprintf("TLS Connection:	Cipher Suite: 0x%x , Name:%s\n", cipherSuite.ID, cipherSuite.Name)
-
-		w.Write([]byte(response))
-
-	})
-
 	// Create a new TLS configuration
 	cfg := &tls.Config{
 		MaxVersion:               tls.VersionTLS13,
 		PreferServerCipherSuites: true,
-		CurvePreferences: []tls.CurveID{
-			tls.CurveP256,
-			tls.CurveP384,
-			tls.CurveP521,
-			tls.X25519,			
-		},
+		CurvePreferences: []tls.CurveID{},
 	}
 
+	// Create a new HTTP server mux
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", handler) 
+
+	// Set an HTTP server instance with configuration with the TLS configuration
 	srv := &http.Server{
 		Addr:         ":443",
 		Handler:      mux,
 		TLSConfig:    cfg,
 		TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler), 0),
 	}
+
+	// Start the server
 	log.Fatal(srv.ListenAndServeTLS(certFileName, keyFileName))
+}
+
+
+func handler (w http.ResponseWriter, req *http.Request) {
+	w.Write([]byte("This is an example server.\n"))
+
+	// Get the curve ID from the writer
+	curveID := getWriterCurveID(w)
+	curveName := getTlsCurveIDName(curveID)
+	response := fmt.Sprintf("TLS Connection: Curve ID: 0x%x, Name: %v\n", uint16(curveID), curveName)
+
+	// Get the cipher suite ID from the writer
+	cipherSuite := getWriterCipherSuite(w)
+	response += fmt.Sprintf("TLS Connection:	Cipher Suite: 0x%d , Name:%s\n", cipherSuite.ID, cipherSuite.Name)
+
+	w.Write([]byte(response))
 }

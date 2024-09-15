@@ -118,7 +118,7 @@ func getWriterCurveID(w http.ResponseWriter) tls.CurveID {
 
 	// get private value using reflection
 	netConn := reflect.ValueOf(w).Elem().FieldByName("conn")
-
+	
 	// Check if netConn is a pointer
 	if netConn.Kind() == reflect.Ptr {
 		// Dereference the pointer to get the value
