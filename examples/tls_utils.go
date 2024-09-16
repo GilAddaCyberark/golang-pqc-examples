@@ -16,7 +16,7 @@ import (
 )
 
 // getTlsCurveIDName returns the name of the curve based on the curveID
-func getTlsCurveIDName(curveID tls.CurveID) string {
+func getTlsCurveIDName(curveID tls.CurveID) (string, error) {
 	curveName := ""
 	switch curveID {
 	case tls.CurveP256:
@@ -30,9 +30,9 @@ func getTlsCurveIDName(curveID tls.CurveID) string {
 	case 0x6399:
 		curveName = "X25519Kyber768Draft00"
 	default:
-		curveName = ("Unknown curve")
+		return "", fmt.Errorf("unknown curve ID: 0x%x", uint16(curveID))
 	}
-	return curveName
+	return curveName, nil
 }
 
 // CreateSelfSignedKeyAndCertFiles generates a private key and a self-signed certificate
@@ -114,9 +114,9 @@ func CreateSelfSignedKeyAndCertFiles(keyFileName, certFileName string) error {
 }
 
 // getRequestCurveID returns the curve ID of the request
-func getRequestCurveID(r *http.Request) tls.CurveID {
+func getRequestCurveID(r *http.Request) (tls.CurveID, error) {
 	if r.TLS == nil {
-		return 0 // Not a TLS connection
+		return 0, fmt.Errorf("the request is not a TLS connection")
 	}
 
 	// Access the private 'testingOnlyCurveID' field using reflection
@@ -124,9 +124,9 @@ func getRequestCurveID(r *http.Request) tls.CurveID {
 	curveIDField := connState.FieldByName("testingOnlyCurveID")
 
 	if !curveIDField.IsValid() {
-		return 0 // Field not found
+		return 0, fmt.Errorf("the curve ID field is not found")
 	}
 
 	// Convert the reflected value to tls.CurveID
-	return tls.CurveID(curveIDField.Uint())
+	return tls.CurveID(curveIDField.Uint()), nil
 }

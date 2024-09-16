@@ -24,9 +24,8 @@ func main() {
 
 	// Create a new TLS configuration
 	cfg := &tls.Config{
-		MaxVersion:               tls.VersionTLS13,
-		PreferServerCipherSuites: true,
-		CurvePreferences:         []tls.CurveID{},
+		MaxVersion:       tls.VersionTLS13,
+		CurvePreferences: []tls.CurveID{},
 	}
 
 	// Create a new HTTP server mux
@@ -49,11 +48,20 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("This is an example server.\n"))
 
 	// Get the curve ID from the writer
+	response := ""
 
-	// curveID := getWriterCurveID(w)
-	curveID := getRequestCurveID(r)
-	curveName := getTlsCurveIDName(curveID)
-	response := fmt.Sprintf("TLS Connection: Curve ID: 0x%x, Name: %v\n", uint16(curveID), curveName)
+	curveID, err := getRequestCurveID(r)
+	if err != nil {
+		w.Write([]byte("Failed to get curve ID from the request\n"))
+		return
+	} else {
+		curveName, err := getTlsCurveIDName(curveID)
+		if err != nil {
+			w.Write([]byte("Failed to get curve name from the curve ID\n"))
+			return
+		}
+		response = fmt.Sprintf("TLS Connection: Curve ID: 0x%x, Name: %v\n", uint16(curveID), curveName)
+	}
 
 	// Get the cipher suite ID from the request
 	cipherSuiteID := r.TLS.CipherSuite
