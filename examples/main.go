@@ -26,12 +26,12 @@ func main() {
 	cfg := &tls.Config{
 		MaxVersion:               tls.VersionTLS13,
 		PreferServerCipherSuites: true,
-		CurvePreferences: []tls.CurveID{},
+		CurvePreferences:         []tls.CurveID{},
 	}
 
 	// Create a new HTTP server mux
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", handler) 
+	mux.HandleFunc("/", handler)
 
 	// Set an HTTP server instance with configuration with the TLS configuration
 	srv := &http.Server{
@@ -45,18 +45,21 @@ func main() {
 	log.Fatal(srv.ListenAndServeTLS(certFileName, keyFileName))
 }
 
-
-func handler (w http.ResponseWriter, req *http.Request) {
+func handler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("This is an example server.\n"))
 
 	// Get the curve ID from the writer
-	curveID := getWriterCurveID(w)
+
+	// curveID := getWriterCurveID(w)
+	curveID := getRequestCurveID(r)
 	curveName := getTlsCurveIDName(curveID)
 	response := fmt.Sprintf("TLS Connection: Curve ID: 0x%x, Name: %v\n", uint16(curveID), curveName)
 
-	// Get the cipher suite ID from the writer
-	cipherSuite := getWriterCipherSuite(w)
-	response += fmt.Sprintf("TLS Connection:	Cipher Suite: 0x%d , Name:%s\n", cipherSuite.ID, cipherSuite.Name)
+	// Get the cipher suite ID from the request
+	cipherSuiteID := r.TLS.CipherSuite
+	cipherSuiteName := tls.CipherSuiteName(cipherSuiteID)
+
+	response += fmt.Sprintf("TLS Connection:	Cipher Suite: 0x%d , Name:%s\n", cipherSuiteID, cipherSuiteName)
 
 	w.Write([]byte(response))
 }

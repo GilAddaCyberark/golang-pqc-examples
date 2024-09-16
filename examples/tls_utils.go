@@ -113,56 +113,20 @@ func CreateSelfSignedKeyAndCertFiles(keyFileName, certFileName string) error {
 	return nil
 }
 
-// getWriterCurveID returns the curve ID of the writer
-func getWriterCurveID(w http.ResponseWriter) tls.CurveID {
-
-	// get private value using reflection
-	netConn := reflect.ValueOf(w).Elem().FieldByName("conn")
-	
-	// Check if netConn is a pointer
-	if netConn.Kind() == reflect.Ptr {
-		// Dereference the pointer to get the value
-		netConn = netConn.Elem()
+// getRequestCurveID returns the curve ID of the request
+func getRequestCurveID(r *http.Request) tls.CurveID {
+	if r.TLS == nil {
+		return 0 // Not a TLS connection
 	}
 
-	// Extract the rwc private member from netConn
-	rwc := netConn.FieldByName("rwc").Elem()
-	if rwc.Kind() == reflect.Ptr {
-		// Dereference the pointer to get the value
-		rwc = rwc.Elem()
+	// Access the private 'testingOnlyCurveID' field using reflection
+	connState := reflect.ValueOf(*r.TLS)
+	curveIDField := connState.FieldByName("testingOnlyCurveID")
+
+	if !curveIDField.IsValid() {
+		return 0 // Field not found
 	}
 
-	// Extract the curveID private member from rwc
-	curveID := rwc.FieldByName("curveID")
-	tlsCurveID := tls.CurveID(curveID.Uint())
-	return tlsCurveID
-}
-
-func getWriterCipherSuite(w http.ResponseWriter) tls.CipherSuite {
-
-	// get private value using reflection
-	netConn := reflect.ValueOf(w).Elem().FieldByName("conn")
-
-	// Check if netConn is a pointer
-	if netConn.Kind() == reflect.Ptr {
-		// Dereference the pointer to get the value
-		netConn = netConn.Elem()
-	}
-
-	// Extract the rwc private member from netConn
-	rwc := netConn.FieldByName("rwc").Elem()
-	if rwc.Kind() == reflect.Ptr {
-		// Dereference the pointer to get the value
-		rwc = rwc.Elem()
-	}
-
-	// Extract the cipherSuite private member from rwc
-	cipherSuiteID := rwc.FieldByName("cipherSuite").Uint()
-
-	// Create a new tls.CipherSuite object
-	cipherSuite := tls.CipherSuite{
-		ID:   uint16(cipherSuiteID),
-		Name: tls.CipherSuiteName(uint16(cipherSuiteID)),
-	}
-	return cipherSuite
+	// Convert the reflected value to tls.CurveID
+	return tls.CurveID(curveIDField.Uint())
 }
