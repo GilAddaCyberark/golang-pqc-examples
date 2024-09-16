@@ -10,19 +10,46 @@ Go 1.23 introduced support for quantum-resistant cryptography, specifically the 
 * Cipher Suite Information: Shows how to retrieve and display the cipher suite used in a TLS connection.
 
 ## Getting Started
-* Ensure you have Go 1.23 or later installed.
-* Clone this repository:
+Ensure you have Go 1.23 or later installed.
+
+Clone this repository:
 
 ```bash
 git clone https://github.com/GilAddaCyberark/golang-pqc-examples.git
 ```
+Launch the server using this command
+
+```bash
+cd examples
+go run .
+```
+
+### Output
+The command will launch a local a web server listening on localhost port 443.
+The app should prompt 'Starting server on :443'
+This server will response to external clients on root path and return the TLS cipher suite and CurveID
+
+####  Chrome Browser Output
+```
+This is an example server.
+TLS Connection: Curve ID: 0x6399, Name: X25519Kyber768Draft00
+TLS Connection:	Cipher Suite: 0x4865 , Name:TLS_AES_128_GCM_SHA256
+```
+
+####  Opera Browser Output
+```
+This is an example server.
+TLS Connection: Curve ID: 0x1d, Name: X25519
+TLS Connection:	Cipher Suite: 0x4865 , Name:TLS_AES_128_GCM_SHA256
+```
 
 * Navigate to the examples and run them to see post-quantum cryptography in action.
 
-## Examples Included
+### Example code includes
 * HTTPS server with PQC support
 * TLS configuration for quantum resistance
 * Connection information extraction (curve ID, cipher suite)
+
 
 # Why Post-Quantum Cryptography?
 Quantum computers pose a significant threat to current cryptographic standards. Implementing PQC helps future-proof your applications against potential quantum attacks.

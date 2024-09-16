@@ -15,6 +15,7 @@ import (
 	"time"
 )
 
+const logo = "CyberArk AI Center of Excellence"
 // getTlsCurveIDName returns the name of the curve based on the curveID
 func getTlsCurveIDName(curveID tls.CurveID) (string, error) {
 	curveName := ""
@@ -56,22 +57,19 @@ func CreateSelfSignedKeyAndCertFiles(keyFileName, certFileName string) error {
 	if err != nil {
 		return fmt.Errorf("error creating private key file: %v", err)
 	}
+	defer privateKeyFile.Close()
+
 	// Encode the private key to the PEM format
 	err = pem.Encode(privateKeyFile, privateKeyPEM)
 	if err != nil {
 		return fmt.Errorf("error encoding private key to PEM: %v", err)
 	}
 
-	err = privateKeyFile.Close()
-	if err != nil {
-		return fmt.Errorf("error closing private key file: %v", err)
-	}
-
 	// Create a template for the certificate
 	template := x509.Certificate{
 		SerialNumber: big.NewInt(1),
 		Subject: pkix.Name{
-			Organization: []string{"CyberArk Innovation Labs"},
+			Organization: []string{logo},
 		},
 		NotBefore: time.Now(),
 		NotAfter:  time.Now().Add(365 * 24 * time.Hour),
@@ -98,16 +96,18 @@ func CreateSelfSignedKeyAndCertFiles(keyFileName, certFileName string) error {
 		return fmt.Errorf("error creating cert file:%v", err)
 	}
 
+	defer func() error{
+		err = certFile.Close()
+		if err != nil {
+			return fmt.Errorf("error closing cert file:%v ", err)			
+		}
+		return nil
+	} ()
+
 	// Encode the certificate to the PEM format
 	err = pem.Encode(certFile, cert)
 	if err != nil {
 		return fmt.Errorf("error encoding cert to PEM:%v", err)
-	}
-
-	// Close the certificate file
-	err = certFile.Close()
-	if err != nil {
-		return fmt.Errorf("error closing cert file:%v", err)
 	}
 
 	return nil

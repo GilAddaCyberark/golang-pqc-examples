@@ -41,6 +41,7 @@ func main() {
 	}
 
 	// Start the server
+	fmt.Printf("Starting server on %s\n", srv.Addr)
 	log.Fatal(srv.ListenAndServeTLS(certFileName, keyFileName))
 }
 
