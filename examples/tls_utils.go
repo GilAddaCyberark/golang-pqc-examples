@@ -28,6 +28,8 @@ func getTlsCurveIDName(curveID tls.CurveID) (string, error) {
 		curveName = "P521"
 	case tls.X25519:
 		curveName = "X25519"
+	case 0x11ec:
+		curveName = "X25519MLKEM768"
 	case 0x6399:
 		curveName = "X25519Kyber768Draft00"
 	default:
